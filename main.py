@@ -1,8 +1,10 @@
+import os
+
 from flask import Flask, render_template, redirect, url_for, request
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, RadioField
+from wtforms import StringField, SubmitField, RadioField, PasswordField
 from wtforms.validators import DataRequired
 import requests
 
@@ -59,6 +61,7 @@ class NewShowForm(FlaskForm):
     title = StringField('type the title', validators=[DataRequired()])
     choice = RadioField('Have you watched or adding on watchlist?',
                         choices=[('watched', 'Watched'), ('watchlist', 'WatchList')])
+    password = PasswordField('type the secret key', validators=[DataRequired()])
 
     button = SubmitField('add')
 
@@ -79,7 +82,6 @@ class NewShowForm(FlaskForm):
 
 @app.route("/")
 def home():
-
     unwatched_shows = UnwatchedShow.query.order_by(UnwatchedShow.id).all()
     unwatched_shows_title = UnwatchedShow.query.order_by(UnwatchedShow.title).all()
     shows_title = Show.query.order_by(Show.title).all()
@@ -157,7 +159,7 @@ def delete():
 def add():
     global search_result
     form = NewShowForm()
-    if request.method == 'POST':
+    if request.method == 'POST' and request.form['password'] == os.environ['password']:
         url = 'https://api.tvmaze.com/search/shows?'
         query = {
             'q': f"{request.form['title']}",
